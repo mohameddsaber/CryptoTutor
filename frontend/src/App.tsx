@@ -1,9 +1,13 @@
+import React, { useState } from 'react';
 import CaesarCipher from './components/CaesarCipher';
+import MonoalphabeticCipher from './components/MonoalphabeticCipher';
 
 function App() {
+  const [activeTab, setActiveTab] = useState<'caesar' | 'monoalphabetic'>('caesar');
+
   return (
     <div className="min-h-screen bg-slate-100 font-sans p-4 sm:p-8">
-      <div className="max-w-4xl mx-auto space-y-12">
+      <div className="max-w-4xl mx-auto space-y-8">
         <header className="text-center space-y-4 pt-8 pb-4">
           <div className="inline-flex items-center justify-center p-3 bg-indigo-100 rounded-full mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -19,8 +23,32 @@ function App() {
           </p>
         </header>
 
+        <div className="flex justify-center space-x-4 mb-8">
+          <button
+            onClick={() => setActiveTab('caesar')}
+            className={`px-6 py-2 rounded-full font-medium transition-all ${
+              activeTab === 'caesar'
+                ? 'bg-indigo-600 text-white shadow-md'
+                : 'bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            Caesar Cipher
+          </button>
+          <button
+            onClick={() => setActiveTab('monoalphabetic')}
+            className={`px-6 py-2 rounded-full font-medium transition-all ${
+              activeTab === 'monoalphabetic'
+                ? 'bg-emerald-600 text-white shadow-md'
+                : 'bg-white text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            Monoalphabetic Cipher
+          </button>
+        </div>
+
         <main className="pb-12">
-          <CaesarCipher />
+          {activeTab === 'caesar' && <CaesarCipher />}
+          {activeTab === 'monoalphabetic' && <MonoalphabeticCipher />}
         </main>
       </div>
     </div>
