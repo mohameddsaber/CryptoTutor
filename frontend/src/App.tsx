@@ -215,16 +215,9 @@ function App() {
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-8">
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-8 animate-in fade-in slide-in-from-top-4 duration-500">
-              <h2 className="text-3xl font-black text-slate-900 tracking-tight">
-                Interactive Workspace
-              </h2>
-              <p className="text-slate-500 mt-1 text-lg">
-                Explore, encrypt, and decrypt using state-of-the-art algorithms.
-              </p>
-            </div>
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+          <div className="max-w-6xl mx-auto">
+
             
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {renderActiveCipher()}
