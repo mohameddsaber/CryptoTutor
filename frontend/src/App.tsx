@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LandingPage from './components/LandingPage';
 import CaesarCipher from './components/CaesarCipher';
 import MonoalphabeticCipher from './components/MonoalphabeticCipher';
 import HillCipher from './components/HillCipher';
@@ -14,8 +15,10 @@ import DiffieHellmanCipher from './components/DiffieHellmanCipher';
 import RSACipher from './components/RSACipher';
 
 type CipherType = 'caesar' | 'monoalphabetic' | 'playfair' | 'hill' | 'onetimepad' | 'vigenere' | 'railfence' | 'columnar' | 'des' | 'aes' | 'md5' | 'dh' | 'rsa';
+type ViewType = 'landing' | 'workspace';
 
 function App() {
+  const [view, setView] = useState<ViewType>('landing');
   const [activeCipher, setActiveCipher] = useState<CipherType>('rsa');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -53,8 +56,12 @@ function App() {
     }
   }, []);
 
+  if (view === 'landing') {
+    return <LandingPage onEnterWorkspace={() => setView('workspace')} />;
+  }
+
   return (
-    <div className="flex h-screen bg-slate-50 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-50 font-sans overflow-hidden animate-in fade-in duration-700">
       {/* Mobile Backdrop */}
       <div 
         className={`fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
@@ -71,8 +78,11 @@ function App() {
         }`}
       >
         <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600">
+          <button 
+            onClick={() => setView('landing')}
+            className="flex items-center gap-3 group hover:opacity-80 transition-opacity"
+          >
+            <div className="p-2 bg-indigo-100 rounded-lg text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-all">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
               </svg>
@@ -80,7 +90,7 @@ function App() {
             <h1 className="text-xl font-extrabold text-slate-800 tracking-tight">
               CryptoTutor
             </h1>
-          </div>
+          </button>
           {/* Close button for mobile */}
           <button onClick={() => setIsSidebarOpen(false)} className="md:hidden p-2 text-slate-400 hover:text-slate-600">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -206,19 +216,22 @@ function App() {
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Academic Year</span>
                 <span className="text-xs font-bold text-slate-600">2025 / 2026</span>
             </div>
-            <div className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden">
+            <button 
+                onClick={() => setView('landing')}
+                className="w-8 h-8 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden hover:bg-slate-300 transition-colors"
+                title="Go to Home"
+            >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                  <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
                 </svg>
-            </div>
+            </button>
           </div>
         </header>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
-          <div className="max-w-6xl mx-auto">
-
-            
+        <div className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 custom-scrollbar">
+          <div className="max-w-7xl mx-auto">
+                   
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
                 {renderActiveCipher()}
             </div>

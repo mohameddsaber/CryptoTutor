@@ -1,6 +1,12 @@
 package com.ciphers.backend.service;
 
+import com.ciphers.backend.dto.AESResponse;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 public class AESService {
@@ -31,9 +37,9 @@ public class AESService {
 
     private static final int[] RCON = {0x00, 0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36};
 
-    public String encrypt(String hexText, String hexKey) {
+    public AESResponse encrypt(String hexText, String hexKey) {
         try {
-            if (hexKey.length() != 32) return "Error: Key must be 32 hex characters (128 bits)";
+            if (hexKey.length() != 32) return new AESResponse("Error: Key must be 32 hex characters (128 bits)", null);
             
             // Block alignment padding
             StringBuilder padded = new StringBuilder(hexText);
@@ -42,41 +48,63 @@ public class AESService {
             StringBuilder result = new StringBuilder();
             int[] keyWords = generateKeySchedule(hexKey);
             
+            List<Map<String, String>> steps = new ArrayList<>();
+            
             for (int i = 0; i < padded.length(); i += 32) {
                 int[][] state = createStateMatrix(padded.substring(i, i + 32));
-                result.append(encryptBlock(state, keyWords));
+                List<Map<String, String>> blockSteps = (i == 0) ? steps : null;
+                result.append(encryptBlock(state, keyWords, blockSteps));
             }
-            return result.toString();
+            return new AESResponse(result.toString(), steps);
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return new AESResponse("Error: " + e.getMessage(), null);
         }
     }
 
-    public String decrypt(String hexText, String hexKey) {
+    public AESResponse decrypt(String hexText, String hexKey) {
         try {
-            if (hexKey.length() != 32) return "Error: Key must be 32 hex characters (128 bits)";
-            if (hexText.length() % 32 != 0) return "Error: Ciphertext must be multiple of 32 hex characters";
+            if (hexKey.length() != 32) return new AESResponse("Error: Key must be 32 hex characters (128 bits)", null);
+            if (hexText.length() % 32 != 0) return new AESResponse("Error: Ciphertext must be multiple of 32 hex characters", null);
             
             StringBuilder result = new StringBuilder();
             int[] keyWords = generateKeySchedule(hexKey);
             
+            List<Map<String, String>> steps = new ArrayList<>();
+            
             for (int i = 0; i < hexText.length(); i += 32) {
                 int[][] state = createStateMatrix(hexText.substring(i, i + 32));
-                result.append(decryptBlock(state, keyWords));
+                List<Map<String, String>> blockSteps = (i == 0) ? steps : null;
+                result.append(decryptBlock(state, keyWords, blockSteps));
             }
-            return result.toString().replaceAll("0+$", ""); // Crude unpadding
+            return new AESResponse(result.toString().replaceAll("0+$", ""), steps); // Crude unpadding
         } catch (Exception e) {
-            return "Error: " + e.getMessage();
+            return new AESResponse("Error: " + e.getMessage(), null);
         }
     }
 
-    private String encryptBlock(int[][] state, int[] keyWords) {
+    private void recordStep(List<Map<String, String>> steps, String stepName, int[][] state) {
+        if (steps != null) {
+            Map<String, String> step = new HashMap<>();
+            step.put("name", stepName);
+            step.put("state", stateToHex(state));
+            steps.add(step);
+        }
+    }
+
+    private String encryptBlock(int[][] state, int[] keyWords, List<Map<String, String>> steps) {
+        recordStep(steps, "Initial State", state);
         addRoundKey(state, getRoundKeyMatrix(keyWords, 0));
+        recordStep(steps, "Round 0: AddRoundKey", state);
+        
         for (int round = 1; round <= 9; round++) {
             subBytes(state);
+            if (round == 1) recordStep(steps, "Round 1: SubBytes", state);
             shiftRows(state);
+            if (round == 1) recordStep(steps, "Round 1: ShiftRows", state);
             mixColumns(state);
+            if (round == 1) recordStep(steps, "Round 1: MixColumns", state);
             addRoundKey(state, getRoundKeyMatrix(keyWords, round));
+            if (round == 1) recordStep(steps, "Round 1: AddRoundKey", state);
         }
         subBytes(state);
         shiftRows(state);
@@ -84,13 +112,20 @@ public class AESService {
         return stateToHex(state);
     }
 
-    private String decryptBlock(int[][] state, int[] keyWords) {
+    private String decryptBlock(int[][] state, int[] keyWords, List<Map<String, String>> steps) {
+        recordStep(steps, "Initial State", state);
         addRoundKey(state, getRoundKeyMatrix(keyWords, 10));
+        recordStep(steps, "Round 0: AddRoundKey", state);
+        
         for (int round = 9; round >= 1; round--) {
             invShiftRows(state);
+            if (round == 9) recordStep(steps, "Round 1: InvShiftRows", state);
             invSubBytes(state);
+            if (round == 9) recordStep(steps, "Round 1: InvSubBytes", state);
             addRoundKey(state, getRoundKeyMatrix(keyWords, round));
+            if (round == 9) recordStep(steps, "Round 1: AddRoundKey", state);
             invMixColumns(state);
+            if (round == 9) recordStep(steps, "Round 1: InvMixColumns", state);
         }
         invShiftRows(state);
         invSubBytes(state);
@@ -163,6 +198,7 @@ public class AESService {
         for (int i = 0; i < 4; i++) w[i] = (int)Long.parseLong(hexKey.substring(i * 8, i * 8 + 8), 16);
         for (int i = 4; i < 44; i++) {
             int temp = w[i - 1];
+            int NK = 4;
             if (i % NK == 0) temp = subWord(rotWord(temp)) ^ (RCON[i / NK] << 24);
             w[i] = w[i - NK] ^ temp;
         }

@@ -1,6 +1,6 @@
 package com.ciphers.backend.controller;
 
-import com.ciphers.backend.dto.CipherResponse;
+import com.ciphers.backend.dto.AESResponse;
 import com.ciphers.backend.dto.MonoalphabeticRequest;
 import com.ciphers.backend.service.AESService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +15,12 @@ public class AESController {
     private AESService aesService;
 
     @PostMapping("/encrypt")
-    public CipherResponse encrypt(@RequestBody MonoalphabeticRequest request) {
-        return new CipherResponse(aesService.encrypt(request.getText(), request.getKey()));
+    public AESResponse encrypt(@RequestBody MonoalphabeticRequest request) {
+        return aesService.encrypt(request.getText(), request.getKey());
     }
 
     @PostMapping("/decrypt")
-    public CipherResponse decrypt(@RequestBody MonoalphabeticRequest request) {
-        return new CipherResponse(aesService.decrypt(request.getText(), request.getKey()));
+    public AESResponse decrypt(@RequestBody MonoalphabeticRequest request) {
+        return aesService.decrypt(request.getText(), request.getKey());
     }
 }
